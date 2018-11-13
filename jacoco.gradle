@@ -1,0 +1,37 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = '0.8.1'
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+
+    group = "reporting"
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    def excludes = [ '**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*' ]
+    def javaTree = fileTree(
+            // Java generated classes on Android project (debug build)
+            dir: "$buildDir/intermediates/javac/debug",
+            excludes: excludes
+    )
+    def kotlinTree = fileTree(
+            // Kotlin generated classes on Android project (debug build)
+            dir: "$buildDir/tmp/kotlin-classes/debug",
+            excludes: excludes
+    )
+
+    def javaSrc = "${android.sourceSets.main.java.srcDirs}"
+    //def kotlinSrc = "src/main/kotlin"
+    sourceDirectories = files([javaSrc])
+
+    classDirectories = files([javaTree, kotlinTree])
+
+    executionData = fileTree(dir: project.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec', 'outputs/code-coverage/connected/*coverage.ec'
+    ])
+}
